@@ -1,0 +1,478 @@
+<h2 class="sr-only">DPP × Agent AI 互動 Demo：電池護照 End-of-Life 決策模擬器</h2>
+<style>
+/* =========================================
+   1. 變數定義 (CSS Variables)
+   ========================================= */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  /* 色彩系統 */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f4f7f9;
+  --color-background-app: #eef2f6;
+  
+  --color-border-tertiary: #e2e8f0;
+  --color-border-secondary: #cbd5e1;
+  
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  
+  /* 品牌與狀態色 */
+  --color-accent: #378add;
+  --color-success-bg: #eaf3de;
+  --color-success-text: #27500a;
+  --color-warning-bg: #faeeda;
+  --color-warning-text: #633806;
+  --color-danger-bg: #fcebeb;
+  --color-danger-text: #791f1f;
+  --color-info-bg: #e6f1fb;
+  --color-info-text: #0c447c;
+  
+  /* 圓角與陰影 */
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.02);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+  
+  /* 動畫過渡 */
+  --transition-speed: 0.2s;
+}
+
+/* =========================================
+   2. 基礎重置與排版 (Base)
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background-app);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+/* 隱藏標題 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* =========================================
+   3. 佈局與通用元件 (Layout & Components)
+   ========================================= */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-background-primary);
+  padding: 1.5rem;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.section {
+  margin-bottom: 1.75rem;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-speed) ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* 網格系統 */
+.grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+/* 狀態標籤 (Tags) */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tag-ok { background: var(--color-success-bg); color: var(--color-success-text); }
+.tag-warn { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.tag-danger { background: var(--color-danger-bg); color: var(--color-danger-text); }
+.tag-info { background: var(--color-info-bg); color: var(--color-info-text); }
+
+/* =========================================
+   4. 特定區塊樣式 (Specific Modules)
+   ========================================= */
+/* 數據指標卡片 */
+.metric {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: border-color var(--transition-speed) ease;
+}
+.metric:hover {
+  border-color: var(--color-border-secondary);
+}
+.metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.metric-value { font-size: 24px; font-weight: 700; color: var(--color-text-primary); }
+.metric-unit { font-size: 14px; font-weight: 500; color: var(--color-text-secondary); margin-left: 2px;}
+
+/* 滑桿區塊 */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+}
+.slider-label { font-size: 13px; color: var(--color-text-primary); width: 120px; flex-shrink: 0; font-weight: 500;}
+.slider-val { font-size: 14px; font-weight: 600; min-width: 60px; text-align: right; color: var(--color-accent); }
+input[type=range] {
+  flex: 1;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+/* Agent 步驟條 */
+.agent-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--color-border-tertiary);
+}
+.agent-step:last-child { border-bottom: none; padding-bottom: 0; }
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-active { background: var(--color-info-bg); color: var(--color-info-text); box-shadow: 0 0 0 3px rgba(55,138,221,0.1); }
+.step-done { background: var(--color-success-bg); color: var(--color-success-text); }
+.step-idle { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.step-text { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+.step-sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+
+/* 推薦方案卡片 */
+.rec-card {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  transition: all var(--transition-speed) ease;
+}
+.rec-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.rec-card.best {
+  border: 2px solid var(--color-accent);
+  background: #f4f9ff;
+}
+.rec-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 10px; display: flex; align-items: center;}
+.rec-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.rec-row > span:first-child { width: 80px; }
+.rec-row > span:nth-child(2) { font-weight: 600; width: 30px; text-align: right;}
+.rec-bar-bg { background: var(--color-border-tertiary); border-radius: 6px; height: 6px; flex: 1; margin-left: 12px; overflow: hidden; }
+.rec-bar { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
+
+/* 警示觸發區塊 */
+.trigger-box {
+  padding: 12px 16px;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 1.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.trigger-on { background: var(--color-danger-bg); color: var(--color-danger-text); border: 1px solid #f7c1c1; }
+.trigger-off { background: var(--color-success-bg); color: var(--color-success-text); border: 1px solid #c0dd97; }
+
+/* DPP 欄位列表 */
+.dpp-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  font-size: 14px;
+}
+.dpp-field:last-child { border-bottom: none; padding-bottom: 0; }
+.dpp-key { color: var(--color-text-secondary); }
+.dpp-val { color: var(--color-text-primary); font-weight: 500; text-align: right;}
+
+/* 頁籤導覽 (Tabs) */
+.tab-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  background: var(--color-background-secondary);
+  padding: 6px;
+  border-radius: var(--border-radius-md);
+}
+.tab-btn {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-speed) ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+.tab-btn:hover { color: var(--color-text-primary); }
+.tab-btn.active {
+  background: var(--color-background-primary);
+  color: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 面板切換 */
+.panel { display: none; animation: fadeIn 0.3s ease-in-out; }
+.panel.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 主操作按鈕 */
+.action-btn {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  margin-top: 1rem;
+  border-radius: var(--border-radius-md);
+  border: none;
+  background: var(--color-background-secondary);
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: background var(--transition-speed) ease;
+}
+.action-btn:hover {
+  background: #e1effe;
+}
+</style>
+
+<div class="container">
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('passport')"><i class="ti ti-file-certificate" aria-hidden="true"></i> DPP 護照資料</button>
+    <button class="tab-btn" onclick="switchTab('agent')"><i class="ti ti-robot" aria-hidden="true"></i> Agent 決策模擬</button>
+  </div>
+
+  <div id="tab-passport" class="panel active">
+    <div class="section">
+      <div class="label">電池識別碼</div>
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:16px; font-weight:700; color:var(--color-text-primary);">EV-BATT-2027-X99</div>
+          <div style="font-size:13px; color:var(--color-text-secondary); margin-top:4px;">NMC 三元材料・75 kWh・2019/03 出廠</div>
+        </div>
+        <span class="tag tag-warn">SoH 監控中</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label">即時狀態（動態資料）</div>
+      <div style="margin-bottom: 16px;">
+        <div class="slider-row">
+          <span class="slider-label"><i class="ti ti-heart-rate" style="font-size:16px; margin-right:4px;" aria-hidden="true"></i> 健康狀態 SoH</span>
+          <input type="range" min="40" max="100" value="68" id="soh" step="1" oninput="update()">
+          <span class="slider-val" id="soh-out">68%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label"><i class="ti ti-bolt" style="font-size:16px; margin-right:4px;" aria-hidden="true"></i> 充放電次數</span>
+          <input type="range" min="100" max="4000" value="2500" id="cycles" step="10" oninput="update()">
+          <span class="slider-val" id="cycles-out">2500 次</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label"><i class="ti ti-calendar" style="font-size:16px; margin-right:4px;" aria-hidden="true"></i> 使用年限</span>
+          <input type="range" min="1" max="15" value="8" id="age" step="1" oninput="update()">
+          <span class="slider-val" id="age-out">8 年</span>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="metric">
+          <div class="metric-label">SoH</div>
+          <div class="metric-value" id="m-soh">68<span class="metric-unit">%</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">充放電次數</div>
+          <div class="metric-value" id="m-cycles">2500<span class="metric-unit">次</span></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">使用年限</div>
+          <div class="metric-value" id="m-age">8<span class="metric-unit">年</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label">靜態資料（製造時寫入）</div>
+      <div class="card">
+        <div class="dpp-field"><span class="dpp-key">化學材料</span><span class="dpp-val">NMC 三元材料（Li-Ni-Mn-Co-O₂）</span></div>
+        <div class="dpp-field"><span class="dpp-key">額定容量</span><span class="dpp-val">75 kWh</span></div>
+        <div class="dpp-field"><span class="dpp-key">額定功率</span><span class="dpp-val">350 kW</span></div>
+        <div class="dpp-field"><span class="dpp-key">維修紀錄</span><span class="dpp-val">2 次</span></div>
+        <div class="dpp-field"><span class="dpp-key">熱事件紀錄</span><span class="dpp-val" style="display:flex; align-items:center; gap:6px;">0 次 <span class="tag tag-ok">正常</span></span></div>
+        <div class="dpp-field"><span class="dpp-key">使用環境</span><span class="dpp-val">正常</span></div>
+        <div class="dpp-field"><span class="dpp-key">碳足跡 (Scope 3)</span><span class="dpp-val">124 kg CO₂e</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-agent" class="panel">
+    <div class="section">
+      <div id="trigger-box" class="trigger-box trigger-on">
+        <i class="ti ti-alert-triangle" aria-hidden="true" style="font-size:18px;"></i> 
+        <span>SoH &lt; 70% — 已自動觸發 End-of-Life 評估</span>
+      </div>
+
+      <div class="label">Agent 決策迴圈（閉環運作）</div>
+      <div class="card section">
+        <div id="steps"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="label">三種 EoL 方案評估</div>
+      <div id="rec-cards"></div>
+    </div>
+
+    <div class="section">
+      <div class="label">Agent 決策輸出</div>
+      <div class="card" id="decision-output"></div>
+    </div>
+
+    <button class="action-btn" onclick="sendPrompt('請解釋 Agent AI 在 DPP 系統中如何做到自主決策，以及這對資訊系統研究有什麼意義？')">深入解析 Agent 決策機制 ↗</button>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.closest('.tab-btn').classList.add('active');
+}
+
+function update() {
+  const soh = parseInt(document.getElementById('soh').value);
+  const cycles = parseInt(document.getElementById('cycles').value);
+  const age = parseInt(document.getElementById('age').value);
+
+  document.getElementById('soh-out').textContent = soh + '%';
+  document.getElementById('cycles-out').textContent = cycles.toLocaleString() + ' 次';
+  document.getElementById('age-out').textContent = age + ' 年';
+  document.getElementById('m-soh').innerHTML = soh + '<span class="metric-unit">%</span>';
+  document.getElementById('m-cycles').innerHTML = cycles.toLocaleString() + '<span class="metric-unit">次</span>';
+  document.getElementById('m-age').innerHTML = age + '<span class="metric-unit">年</span>';
+
+  const triggered = soh < 70;
+  const tb = document.getElementById('trigger-box');
+  tb.className = 'trigger-box ' + (triggered ? 'trigger-on' : 'trigger-off');
+  tb.innerHTML = triggered
+    ? '<i class="ti ti-alert-triangle" aria-hidden="true" style="font-size:18px;"></i> <span>SoH &lt; 70% — 已自動觸發 End-of-Life 評估</span>'
+    : '<i class="ti ti-circle-check" aria-hidden="true" style="font-size:18px;"></i> <span>SoH 正常（≥ 70%） — Agent 持續監控中</span>';
+
+  const steps = [
+    { label: 'Observe 監控', detail: `偵測到 SoH = ${soh}%，充放電 ${cycles.toLocaleString()} 次，使用 ${age} 年`, state: 'done' },
+    { label: 'Reason 推理', detail: '整合 SoH、使用歷史、材料價值、市場需求', state: 'done' },
+    { label: 'Plan 規劃', detail: '評估三種 EoL 路徑可行性與效益', state: triggered ? 'done' : 'idle' },
+    { label: 'Act 執行', detail: triggered ? '選擇最佳方案並生成決策建議' : '等待觸發條件', state: triggered ? 'active' : 'idle' },
+    { label: 'Learn 學習', detail: '追蹤執行結果、更新模型', state: 'idle' },
+  ];
+
+  document.getElementById('steps').innerHTML = steps.map((s, i) => `
+    <div class="agent-step">
+      <div class="step-num step-${s.state}">${i + 1}</div>
+      <div>
+        <div class="step-text">${s.label}</div>
+        <div class="step-sub">${s.detail}</div>
+      </div>
+    </div>`).join('');
+
+  const ecoScore = Math.min(100, Math.round(soh * 0.8 + (100 - age * 4) * 0.2));
+  const secondLifeScore = Math.min(100, Math.round(soh * 0.9 + (4000 - cycles) / 40));
+  const recycleScore = Math.round(100 - soh * 0.3 + age * 2);
+  const best = secondLifeScore >= ecoScore && secondLifeScore >= recycleScore ? 'B'
+    : ecoScore >= recycleScore ? 'A' : 'C';
+
+  const recs = [
+    { id: 'A', label: '方案 A：直接回收拆解', eco: recycleScore, econ: Math.round(recycleScore * 0.6), tech: 75, legal: 95 },
+    { id: 'B', label: '方案 B：Second-Life 儲能', eco: ecoScore, econ: Math.round(secondLifeScore * 0.9), tech: Math.min(95, secondLifeScore), legal: 90 },
+    { id: 'C', label: '方案 C：零件再製造', eco: Math.round(ecoScore * 0.8), econ: Math.round(secondLifeScore * 0.7), tech: 65, legal: 85 },
+  ];
+
+  document.getElementById('rec-cards').innerHTML = recs.map(r => `
+    <div class="rec-card ${r.id === best ? 'best' : ''}">
+      <div class="rec-title">
+        ${r.id === best ? '<span class="tag tag-info" style="margin-right:8px">推薦</span>' : ''}
+        ${r.label}
+      </div>
+      ${[['環境影響', r.eco, '#639922'], ['預期效益', r.econ, '#378ADD'], ['技術可行性', r.tech, '#7F77DD'], ['法規合規性', r.legal, '#1D9E75']].map(([name, val, color]) => `
+        <div class="rec-row">
+          <span>${name}</span>
+          <span>${val}</span>
+          <div class="rec-bar-bg"><div class="rec-bar" style="width:${val}%;background:${color}"></div></div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  const bestRec = recs.find(r => r.id === best);
+  document.getElementById('decision-output').innerHTML = `
+    <div style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+      <span class="tag tag-info">Agent 建議</span>
+      <span style="font-size:15px; font-weight:700; color:var(--color-text-primary);">${bestRec.label}</span>
+    </div>
+    <div class="dpp-field"><span class="dpp-key">預期經濟效益</span><span class="dpp-val">${bestRec.econ} / 100</span></div>
+    <div class="dpp-field"><span class="dpp-key">環境影響分數</span><span class="dpp-val">${bestRec.eco} / 100</span></div>
+    <div class="dpp-field"><span class="dpp-key">技術可行性</span><span class="dpp-val">${bestRec.tech} / 100</span></div>
+    <div class="dpp-field"><span class="dpp-key">法規合規性</span><span class="dpp-val">${bestRec.legal} / 100</span></div>
+    <div style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--color-border-tertiary); font-size:13px; color:var(--color-text-secondary); display:flex; gap:6px;">
+      <i class="ti ti-info-circle" aria-hidden="true" style="font-size:16px; flex-shrink:0;"></i>
+      <span>決策結果與執行紀錄將自動寫回 DPP，更新產品生命週期歷程。</span>
+    </div>`;
+}
+
+update();
+</script>
