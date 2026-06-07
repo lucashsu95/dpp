@@ -13,7 +13,7 @@ templates/
 ---
 
 ## base.html — 共用佈局
-
+{% raw %}
 ```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -36,11 +36,12 @@ templates/
 </body>
 </html>
 ```
-
+{% endraw %}
 ---
 
 ## index.html — 查詢頁面
 
+{% raw %}
 ```html
 {% extends "base.html" %}
 {% block content %}
@@ -68,6 +69,7 @@ templates/
 <div id="result" style="margin-top:24px;"></div>
 {% endblock %}
 ```
+{% endraw %}
 
 ### HTMX 行為說明
 
@@ -82,6 +84,7 @@ templates/
 
 ## partials/result.html — 查詢結果片段
 
+{% raw %}
 ```html
 {% if result.answer %}
 
@@ -117,6 +120,7 @@ templates/
 
 {% endif %}
 ```
+{% endraw %}
 
 ### 狀態說明
 
