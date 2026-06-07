@@ -9,7 +9,7 @@
 ## Week 2 — Agent 層
 
 - [ ] 合併兩個資料來源為單一 context 結構
-- [ ] 設計 Claude API prompt（限縮為資料整理者，禁止自行推斷）
+- [ ] 設計 Gemini API prompt（限縮為資料整理者，禁止自行推斷）
 - [ ] 實作查無資料的 fallback 處理
 
 ## Week 3 — 介面層

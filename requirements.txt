@@ -1,0 +1,9 @@
+django>=4.2
+google-genai
+qrcode[pil]
+requests
+python-dotenv
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url

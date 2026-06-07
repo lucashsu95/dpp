@@ -16,7 +16,7 @@ Django View 接收
     ↓
 查本地資料庫（食品業者 CSV 匯入）
     ↓
-整合資料丟給 Claude API
+整合資料丟給 Gemini API
     ↓
 HTMX 更新前端顯示結果
 ```
@@ -29,7 +29,7 @@ HTMX 更新前端顯示結果
 | 資料庫 | PostgreSQL |
 | 非同步排程 | Celery Beat / APScheduler |
 | 前端互動 | HTMX |
-| AI 推論 | Claude API（claude-sonnet） |
+| AI 推論 | Gemini API（gemini-2.5-flash） |
 | 爬蟲備援 | requests + BeautifulSoup |
 
 ## Prompt 設計原則
@@ -46,7 +46,7 @@ HTMX 更新前端顯示結果
 ## 快速啟動
 
 ```bash
-pip install django anthropic requests python-dotenv gunicorn whitenoise
+pip install django google-genai requests python-dotenv gunicorn whitenoise
 cp .env.example .env
 python manage.py makemigrations
 python manage.py migrate

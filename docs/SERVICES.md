@@ -8,7 +8,7 @@ food_safety/
 │   ├── __init__.py
 │   ├── taft_service.py        # 產銷履歷 API
 │   ├── fda_service.py         # 食品業者查詢
-│   └── agent_service.py       # Claude Agent 整合
+│   └── agent_service.py       # Gemini Agent 整合
 ├── management/
 │   └── commands/
 │       └── sync_fda_data.py   # 手動 / 排程匯入
@@ -149,15 +149,15 @@ class Command(BaseCommand):
 
 ---
 
-## agent_service.py — Claude Agent 整合
+## agent_service.py — Gemini Agent 整合
 
 ```python
 import os
-from anthropic import Anthropic
+from google import genai
 from .taft_service import query_by_trace_code, query_by_crop_name
 from .fda_service import query_operator
 
-client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 SYSTEM_PROMPT = """
 你是一個食品安全查詢助理。
@@ -168,7 +168,7 @@ SYSTEM_PROMPT = """
 
 def run_food_agent(query: str) -> dict:
     """
-    整合兩個資料來源，交給 Claude 整理回答
+    整合兩個資料來源，交給 Gemini 整理回答
     回傳 { "answer": str, "raw_taft": ..., "raw_fda": ... }
     """
     taft_result = query_by_trace_code(query) or query_by_crop_name(query)
@@ -182,17 +182,13 @@ def run_food_agent(query: str) -> dict:
 {fda_result if fda_result else '查無食品業者登錄資料'}
 """
 
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1024,
-        system=SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": f"查詢：{query}\n\n{context}"}
-        ]
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=f"{SYSTEM_PROMPT}\n\n查詢：{query}\n\n{context}",
     )
 
     return {
-        "answer":   message.content[0].text,
+        "answer":   response.text,
         "raw_taft": taft_result,
         "raw_fda":  fda_result,
     }

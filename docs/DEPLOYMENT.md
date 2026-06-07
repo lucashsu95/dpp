@@ -52,7 +52,7 @@ python-3.11.9
 
 ```
 django>=4.2
-anthropic
+google-genai
 requests
 python-dotenv
 gunicorn
@@ -108,7 +108,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 |---|---|
 | `DJANGO_SECRET_KEY` | Django 密鑰（必填） |
 | `TAFT_API_KEY` | 產銷履歷 API 金鑰 |
-| `ANTHROPIC_API_KEY` | Claude API 金鑰 |
+| `GEMINI_API_KEY` | Gemini API 金鑰 |
 | `FDA_DATASET_URL` | 食品業者資料集下載網址 |
 | `ALLOWED_HOSTS` | 例如 `your-app.railway.app` |
 | `DEBUG` | `False` |

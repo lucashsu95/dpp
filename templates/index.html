@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>🥬 食安查詢 Agent</h1>
+
+<form id="search-form">
+  <div class="search-wrapper">
+    <input
+      type="text"
+      name="q"
+      id="search-input"
+      placeholder="輸入追溯碼、作物名稱或業者名稱"
+      autofocus
+      value="{{ initial_query }}"
+      hx-get="/search/"
+      hx-trigger="input changed delay:500ms, search"
+      hx-target="#result"
+      hx-indicator="#spinner"
+    >
+    {% if initial_query %}
+    <button
+      type="button"
+      id="clear-btn"
+      class="clear-btn"
+      aria-label="清除查詢"
+    >✕</button>
+    {% endif %}
+  </div>
+</form>
+
+<div id="spinner" class="spinner" style="display:none;">
+  查詢中...
+</div>
+
+<div id="result" class="result"></div>
+
+{% if products %}
+<div class="product-cards-section">
+  <h2>快速選取產品</h2>
+  <div class="product-cards">
+    {% for product in products %}
+    <article class="product-card" data-trace-code="{{ product.TraceCode }}">
+      <header class="product-card-header">
+        <h3 class="product-name">{{ product.CropName }}</h3>
+        <span class="trace-code">{{ product.TraceCode }}</span>
+      </header>
+      <div class="product-info">
+        <p><strong>農民</strong> {{ product.FarmerName }}</p>
+        <p><strong>產地</strong> {{ product.FarmLocation }}</p>
+      </div>
+      {% if product.qr_data_url %}
+      <div class="qr-code">
+        <img src="{{ product.qr_data_url }}" alt="QR Code for {{ product.TraceCode }}" loading="lazy">
+        <p class="qr-caption">掃碼查詢此產品</p>
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #search-input {
+    width: 100%;
+    padding: 14px 48px 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  #search-input:focus {
+    outline: none;
+    border-color: #2e7d32;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+  }
+
+  .clear-btn {
+    position: absolute;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .clear-btn:hover {
+    background: #d32f2f;
+    color: #fff;
+  }
+
+  .spinner {
+    margin-top: 12px;
+    color: #888;
+    font-size: 0.9rem;
+  }
+
+  .result {
+    margin-top: 24px;
+  }
+
+  .product-cards-section {
+    margin-top: 40px;
+  }
+
+  .product-cards-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #333;
+  }
+
+  .product-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .product-card {
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #2e7d32;
+  }
+
+  .product-card:focus-visible {
+    outline: 2px solid #2e7d32;
+    outline-offset: 2px;
+  }
+
+  .product-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .product-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #1b5e20;
+  }
+
+  .trace-code {
+    font-size: 0.75rem;
+    color: #888;
+    font-family: monospace;
+  }
+
+  .product-info {
+    margin: 0 0 12px;
+    font-size: 0.875rem;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .product-info p {
+    margin: 4px 0;
+  }
+
+  .product-info strong {
+    color: #333;
+  }
+
+  .qr-code {
+    text-align: center;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .qr-code img {
+    max-width: 120px;
+    height: auto;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .qr-caption {
+    margin: 8px 0 0;
+    font-size: 0.7rem;
+    color: #999;
+  }
+
+  @media (max-width: 480px) {
+    .product-cards {
+      grid-template-columns: 1fr;
+    }
+
+    #search-input {
+      padding: 12px 40px 12px 14px;
+      font-size: 1rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .product-cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('clear-btn');
+    const cards = document.querySelectorAll('.product-card');
+
+    function triggerSearch() {
+      input.dispatchEvent(new Event('search'));
+    }
+
+    function setQuery(value) {
+      input.value = value;
+      triggerSearch();
+    }
+
+    function clearQuery() {
+      input.value = '';
+      if (clearBtn) clearBtn.remove();
+      triggerSearch();
+    }
+
+    cards.forEach(function (card) {
+      card.addEventListener('click', function () {
+        const code = card.dataset.traceCode;
+        if (code) setQuery(code);
+      });
+
+      card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const code = card.dataset.traceCode;
+          if (code) setQuery(code);
+        }
+      });
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', clearQuery);
+    }
+
+    const initialQuery = "{{ initial_query|escapejs }}";
+    if (initialQuery && input.value === initialQuery) {
+      triggerSearch();
+    }
+  })();
+</script>
+{% endblock %}
