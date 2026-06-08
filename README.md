@@ -126,9 +126,14 @@ dpp/
 
 | 文件 | 說明 |
 |---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 系統架構、資料流、模組職責 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 系統架構、資料流、模組職責、跨切面關注點 |
 | [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) | 產銷履歷 API、食品業者 CSV、環境變數 |
 | [docs/SERVICES.md](docs/SERVICES.md) | Service 層程式碼 |
 | [docs/FRONTEND.md](docs/FRONTEND.md) | HTMX 模板與前端行為 |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Railway 部署設定 |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Railway 部署設定 (舊版) |
+| [docs/DEPLOYMENT_ARCHITECTURE.md](docs/DEPLOYMENT_ARCHITECTURE.md) | 部署架構拓撲與完整設定 |
+| [docs/API_SPECIFICATION.md](docs/API_SPECIFICATION.md) | REST API + 外部 API + 內部服務 API 規格 |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | 76 項測試報告、邊界值分析、涵蓋缺口 |
+| [docs/MONITORING.md](docs/MONITORING.md) | 監控指標、日誌、警報建議 |
+| [docs/SECURITY_SCAN.md](docs/SECURITY_SCAN.md) | 安全掃描結果與改善建議 |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | 開發里程碑、未來階段、已知風險 |

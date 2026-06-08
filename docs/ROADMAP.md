@@ -31,6 +31,12 @@
 - [x] Frontend polish: skeleton loader, error states, empty states, data freshness, CSS transitions
 - [x] Health check endpoint at /health/
 - [x] Documentation updated (ROADMAP, SERVICES)
+- [x] ARCHITECTURE.md — 完整系統脈絡圖 (含 7 資料源、QR Service、Scheduler)
+- [x] API_SPECIFICATION.md — REST API + 外部 API + 內部 Service API 規格
+- [x] TEST_REPORT.md — 76 測試總結 (BVA, 涵蓋缺口)
+- [x] DEPLOYMENT_ARCHITECTURE.md — Railway 部署架構拓撲
+- [x] MONITORING.md — 健康檢查、日誌、監控指標、警報建議
+- [x] SECURITY_SCAN.md — 代碼審查結果、工具建議、改進優先級
 
 ---
 
