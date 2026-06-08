@@ -88,7 +88,6 @@ python manage.py runserver
 需在 `.env` 設定：
 
 - `GEMINI_API_KEY` — Gemini API 金鑰
-- `TAFT_API_KEY` — 產銷履歷 API 金鑰
 - `USE_MOCK_API=False`
 
 ## 專案結構
