@@ -2,8 +2,8 @@ import os
 import requests
 from django.conf import settings
 
-TAFT_API_KEY = os.getenv("TAFT_API_KEY")
 TAFT_API_BASE_URL = os.getenv("TAFT_API_BASE_URL")
+TAFT_UNIT_ID = os.getenv("TAFT_UNIT_ID", "063")
 USE_MOCK_API = os.getenv("USE_MOCK_API", "False").lower() == "true"
 
 
@@ -15,40 +15,39 @@ def query_by_trace_code(trace_code: str) -> dict | None:
     if USE_MOCK_API:
         return _mock_trace_code(trace_code)
 
-    url = f"{TAFT_API_BASE_URL}/TraceabilityData"
+    url = TAFT_API_BASE_URL
     params = {
-        "$filter": f"TraceCode eq '{trace_code}'",
-        "ApiKey": TAFT_API_KEY,
-        "$format": "json",
+        "Tracecode": trace_code,
+        "UnitId": TAFT_UNIT_ID,
     }
     try:
         res = requests.get(url, params=params, timeout=10)
         res.raise_for_status()
-        data = res.json().get("value", [])
+        data = res.json()
         return data[0] if data else None
     except requests.RequestException as e:
         print(f"[TAFT API Error] {e}")
         return None
 
 
-def query_by_crop_name(crop_name: str) -> list[dict]:
+def query_by_product_name(product_name: str) -> list[dict]:
     """
-    用作物名稱查，可能回傳多筆
+    用產品名稱查，可能回傳多筆
+    最多回傳 20 筆
     """
     if USE_MOCK_API:
-        return _mock_crop_name(crop_name)
+        return _mock_product_name(product_name)
 
-    url = f"{TAFT_API_BASE_URL}/TraceabilityData"
+    url = TAFT_API_BASE_URL
     params = {
-        "$filter": f"contains(CropName, '{crop_name}')",
-        "ApiKey": TAFT_API_KEY,
-        "$format": "json",
-        "$top": 10,
+        "ProductName": product_name,
+        "UnitId": TAFT_UNIT_ID,
     }
     try:
         res = requests.get(url, params=params, timeout=10)
         res.raise_for_status()
-        return res.json().get("value", [])
+        data = res.json()
+        return data[:20]
     except requests.RequestException as e:
         print(f"[TAFT API Error] {e}")
         return []
@@ -59,7 +58,7 @@ def _mock_trace_code(trace_code: str) -> dict | None:
     mock_data = {
         "TW00123456789": {
             "TraceCode": "TW00123456789",
-            "CropName": "有機青江菜",
+            "ProductName": "有機青江菜",
             "FarmerName": "陳農夫",
             "FarmLocation": "台中市大肚區",
             "PlantDate": "2024-01-15",
@@ -69,7 +68,7 @@ def _mock_trace_code(trace_code: str) -> dict | None:
         },
         "TW00123456790": {
             "TraceCode": "TW00123456790",
-            "CropName": "青江菜",
+            "ProductName": "青江菜",
             "FarmerName": "林農夫",
             "FarmLocation": "彰化縣員林市",
             "PlantDate": "2024-02-01",
@@ -79,7 +78,7 @@ def _mock_trace_code(trace_code: str) -> dict | None:
         },
         "TW00123456791": {
             "TraceCode": "TW00123456791",
-            "CropName": "高麗菜",
+            "ProductName": "高麗菜",
             "FarmerName": "王農夫",
             "FarmLocation": "雲林縣斗六市",
             "PlantDate": "2023-11-01",
@@ -91,13 +90,13 @@ def _mock_trace_code(trace_code: str) -> dict | None:
     return mock_data.get(trace_code)
 
 
-def _mock_crop_name(crop_name: str) -> list[dict]:
+def _mock_product_name(product_name: str) -> list[dict]:
     """Mock data for development"""
     mock_data = {
         "青江菜": [
             {
                 "TraceCode": "TW00123456789",
-                "CropName": "有機青江菜",
+                "ProductName": "有機青江菜",
                 "FarmerName": "陳農夫",
                 "FarmLocation": "台中市大肚區",
                 "PlantDate": "2024-01-15",
@@ -107,7 +106,7 @@ def _mock_crop_name(crop_name: str) -> list[dict]:
             },
             {
                 "TraceCode": "TW00123456790",
-                "CropName": "青江菜",
+                "ProductName": "青江菜",
                 "FarmerName": "林農夫",
                 "FarmLocation": "彰化縣員林市",
                 "PlantDate": "2024-02-01",
@@ -119,7 +118,7 @@ def _mock_crop_name(crop_name: str) -> list[dict]:
         "高麗菜": [
             {
                 "TraceCode": "TW00123456791",
-                "CropName": "高麗菜",
+                "ProductName": "高麗菜",
                 "FarmerName": "王農夫",
                 "FarmLocation": "雲林縣斗六市",
                 "PlantDate": "2023-11-01",
@@ -130,6 +129,6 @@ def _mock_crop_name(crop_name: str) -> list[dict]:
         ],
     }
     for key, value in mock_data.items():
-        if key in crop_name:
+        if key in product_name:
             return value
     return []
