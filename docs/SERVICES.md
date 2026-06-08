@@ -16,6 +16,7 @@ food_safety/
 ├── management/
 │   └── commands/
 │       └── sync_fda_data.py   # 手動 / 排程匯入
+├── scheduler.py               # APScheduler 排程器 (每週同步)
 ├── models.py
 └── views.py
 ```
@@ -278,6 +279,71 @@ class Command(BaseCommand):
 
 ---
 
+## scheduler.py — APScheduler 排程器
+
+```python
+import os
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobStore
+from django.core.management import call_command
+
+
+def run_weekly_sync():
+    """Run the sync_fda_data management command."""
+    call_command("sync_fda_data")
+
+
+def start_scheduler():
+    """Start the APScheduler with DjangoJobStore for persistence."""
+    if os.environ.get("START_SCHEDULER", "False").lower() != "true":
+        return
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_jobstore(DjangoJobStore(), "default")
+
+    scheduler.add_job(
+        run_weekly_sync,
+        "cron",
+        day_of_week="sun",
+        hour=2,
+        minute=0,
+        id="weekly_fda_sync",
+        replace_existing=True,
+    )
+
+    scheduler.start()
+```
+
+使用 `django-apscheduler` 搭配 `DjangoJobStore` 實現排程持久化。每週日 02:00 執行 `sync_fda_data` 指令，由 `START_SCHEDULER` 環境變數控制啟停。
+
+---
+
+## apps.py — AppConfig 啟動鉤子
+
+```python
+import os
+from django.apps import AppConfig
+
+
+class FoodSafetyConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "food_safety"
+    verbose_name = "食品安全"
+
+    def ready(self):
+        if os.environ.get("START_SCHEDULER", "False").lower() != "true":
+            return
+        if os.environ.get("RUN_MAIN") != "true":
+            return
+        from food_safety.scheduler import start_scheduler
+
+        start_scheduler()
+```
+
+在 Django 啟動時透過 `ready()` 鉤子條件式啟動排程器。僅當 `START_SCHEDULER=True` 且 `RUN_MAIN=true`（避免 dev 模式下重複啟動）時才會初始化。
+
+---
+
 ## agent_service.py — Gemini Agent 整合
 
 ```python
@@ -442,9 +508,15 @@ def run_food_agent(query: str) -> dict:
 ## views.py — HTMX 查詢端點
 
 ```python
-from django.http import HttpResponse
+import logging
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from .services.agent_service import run_food_agent
+import requests
+from datetime import datetime
+from django.db import connections
+
+logger = logging.getLogger(__name__)
 
 def index(request):
     return render(request, "index.html")
@@ -453,9 +525,29 @@ def search(request):
     query = request.GET.get("q", "").strip()
     if not query:
         return HttpResponse("<p>請輸入查詢內容</p>")
+    try:
+        result = run_food_agent(query)
+        return render(request, "partials/result.html", {"result": result})
+    except requests.RequestException:
+        logger.error(f"API unavailable for query: {query}")
+        return render(request, "partials/result.html", {"result": {"answer": None}, "error": "API 服務暫時無法連線，請稍後再試"})
+    except Exception as e:
+        logger.error(f"Search error for query '{query}': {e}", exc_info=True)
+        return render(request, "partials/result.html", {"result": {"answer": None}, "error": "查詢過程發生錯誤，請稍後再試"})
 
-    result = run_food_agent(query)
-    return render(request, "partials/result.html", {"result": result})
+def health(request):
+    db_ok = "disconnected"
+    try:
+        connections['default'].cursor().execute('SELECT 1')
+        db_ok = "connected"
+    except Exception:
+        db_ok = "disconnected"
+    return JsonResponse({
+        "status": "ok",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat(),
+        "database": db_ok,
+    })
 ```
 
 ---
@@ -469,5 +561,6 @@ from . import views
 urlpatterns = [
     path("",        views.index,  name="index"),
     path("search/", views.search, name="search"),
+    path("health/", views.health, name="health"),
 ]
 ```

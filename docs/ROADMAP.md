@@ -4,21 +4,33 @@
 
 ## Week 1 — 資料層
 
-- [ ] 申請產銷履歷 API，封裝為 Django service
-- [ ] 下載食品業者 CSV，撰寫 `management command` 匯入 PostgreSQL
-- [ ] 建立 Cron Job，每週自動更新食品業者資料
+- [x] 申請產銷履歷 API，封裝為 Django service
+- [x] 下載食品業者 CSV，撰寫 `management command` 匯入 PostgreSQL
+- [x] 建立 Cron Job，每週自動更新食品業者資料
 
 ## Week 2 — Agent 層
 
-- [ ] 合併兩個資料來源為單一 context 結構
-- [ ] 設計 Gemini API prompt（限縮為資料整理者，禁止自行推斷）
-- [ ] 實作查無資料的 fallback 處理
+- [x] 合併兩個資料來源為單一 context 結構
+- [x] 設計 Gemini API prompt（限縮為資料整理者，禁止自行推斷）
+- [x] 實作查無資料的 fallback 處理
 
 ## Week 3 — 介面層
 
-- [ ] Django + HTMX 查詢頁面
-- [ ] 輸入框 → loading 動畫 → 結果卡片
-- [ ] 顯示原始資料來源區塊，提升可信度
+- [x] Django + HTMX 查詢頁面
+- [x] 輸入框 → loading 動畫 → 結果卡片
+- [x] 顯示原始資料來源區塊，提升可信度
+
+## Production Readiness (2026-06)
+
+- [x] APScheduler weekly FDA data sync (django-apscheduler)
+- [x] Retry logic with exponential backoff (tenacity) on TAFT/MOA services
+- [x] View error handling with user-friendly messages
+- [x] Production Django settings (SECRET_KEY/DEBUG/ALLOWED_HOSTS from env)
+- [x] Logging configuration (console + structured format)
+- [x] Test suite: view tests, FDA service tests, sync tests, agent error path tests (76 total)
+- [x] Frontend polish: skeleton loader, error states, empty states, data freshness, CSS transitions
+- [x] Health check endpoint at /health/
+- [x] Documentation updated (ROADMAP, SERVICES)
 
 ---
 

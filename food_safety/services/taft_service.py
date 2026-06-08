@@ -1,10 +1,31 @@
 import os
 import requests
 from django.conf import settings
+from requests import RequestException
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-TAFT_API_BASE_URL = os.getenv("TAFT_API_BASE_URL")
+TAFT_API_BASE_URL = os.getenv("TAFT_API_BASE_URL", "")
 TAFT_UNIT_ID = os.getenv("TAFT_UNIT_ID", "063")
 USE_MOCK_API = os.getenv("USE_MOCK_API", "False").lower() == "true"
+
+
+def _taft_request(url: str, params: dict) -> dict | list | None:
+    """
+    Internal helper with retry logic for TAFT API calls.
+    Only retries on RequestException (network errors, 5xx), not on 4xx.
+    """
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
+        retry=retry_if_exception_type(RequestException),
+        reraise=True,
+    )
+    def _request():
+        res = requests.get(url, params=params, timeout=10)
+        res.raise_for_status()
+        return res.json()
+
+    return _request()
 
 
 def query_by_trace_code(trace_code: str) -> dict | None:
@@ -21,11 +42,9 @@ def query_by_trace_code(trace_code: str) -> dict | None:
         "UnitId": TAFT_UNIT_ID,
     }
     try:
-        res = requests.get(url, params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
+        data = _taft_request(url, params)
         return data[0] if data else None
-    except requests.RequestException as e:
+    except RequestException as e:
         print(f"[TAFT API Error] {e}")
         return None
 
@@ -44,11 +63,9 @@ def query_by_product_name(product_name: str) -> list[dict]:
         "UnitId": TAFT_UNIT_ID,
     }
     try:
-        res = requests.get(url, params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-        return data[:20]
-    except requests.RequestException as e:
+        data = _taft_request(url, params)
+        return data[:20] if data else []
+    except RequestException as e:
         print(f"[TAFT API Error] {e}")
         return []
 

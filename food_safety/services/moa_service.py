@@ -1,4 +1,6 @@
 import requests
+from requests import RequestException
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 MOA_API_BASE_URL = "https://data.moa.gov.tw/Service/OpenData/DataFileService.aspx"
 MOA_API_TRANS_URL = "https://data.moa.gov.tw/Service/OpenData/TransService.aspx"
@@ -8,6 +10,25 @@ MOA_UNIT_ID_ORGANIC = "270"
 MOA_UNIT_ID_CAS = "qNRePfOf8YMS"
 
 
+def _moa_request(url: str, params: dict | None = None) -> list[dict] | None:
+    """
+    Internal helper with retry logic for MOA API calls.
+    Only retries on RequestException (network errors, 5xx), not on 4xx.
+    """
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=4),
+        retry=retry_if_exception_type(RequestException),
+        reraise=True,
+    )
+    def _request():
+        res = requests.get(url, params=params, timeout=10)
+        res.raise_for_status()
+        return res.json()
+
+    return _request()
+
+
 def query_inspection_result(crop_name: str) -> list[dict]:
     """
     用作物名稱查農藥殘留檢驗結果。
@@ -15,10 +36,11 @@ def query_inspection_result(crop_name: str) -> list[dict]:
     """
     params = {"UnitId": MOA_UNIT_ID_INSPECTION}
     try:
-        res = requests.get(MOA_API_BASE_URL, params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-    except (requests.RequestException, ValueError):
+        data = _moa_request(MOA_API_BASE_URL, params)
+    except (RequestException, ValueError):
+        return []
+
+    if not data:
         return []
 
     matched = [
@@ -36,10 +58,11 @@ def query_organic_cert(producer_name: str) -> list[dict]:
     """
     params = {"UnitId": MOA_UNIT_ID_ORGANIC}
     try:
-        res = requests.get(MOA_API_BASE_URL, params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-    except (requests.RequestException, ValueError):
+        data = _moa_request(MOA_API_BASE_URL, params)
+    except (RequestException, ValueError):
+        return []
+
+    if not data:
         return []
 
     matched = [
@@ -57,10 +80,11 @@ def query_cas_product(product_name: str) -> list[dict]:
     """
     params = {"UnitId": MOA_UNIT_ID_CAS}
     try:
-        res = requests.get(MOA_API_TRANS_URL, params=params, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-    except (requests.RequestException, ValueError):
+        data = _moa_request(MOA_API_TRANS_URL, params)
+    except (RequestException, ValueError):
+        return []
+
+    if not data:
         return []
 
     matched = [
@@ -77,10 +101,11 @@ def query_pesticide_info(pesticide_name: str) -> list[dict]:
     過濾中文名稱包含 pesticide_name 的資料，最多回傳 20 筆。
     """
     try:
-        res = requests.get(MOA_PESTICIDE_DATA_URL, timeout=10)
-        res.raise_for_status()
-        data = res.json()
-    except (requests.RequestException, ValueError):
+        data = _moa_request(MOA_PESTICIDE_DATA_URL)
+    except (RequestException, ValueError):
+        return []
+
+    if not data:
         return []
 
     matched = [
