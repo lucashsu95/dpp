@@ -55,7 +55,7 @@
 | 項目 | 狀態 | 說明 |
 |---|---|---|
 | GET 查詢 (安全方法) | ✅ 通過 | `search` 端點使用 GET (查詢操作，無副作用) |
-| HTMX 請求 | ⚠️ 注意 | 目前 HTMX 使用 `hx-get`。若未來改為 POST，需加入 `{% csrf_token %}` |
+| HTMX 請求 | ⚠️ 注意 | 目前 HTMX 使用 `hx-get`。若未來改為 POST，需加入 `{% raw %}{% csrf_token %}{% endraw %}` |
 
 ### 2.6 依賴安全性
 
