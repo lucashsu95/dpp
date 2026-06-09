@@ -36,7 +36,7 @@
 
 | 項目 | 狀態 | 說明 |
 |---|---|---|
-| Django 模板自動轉義 | ✅ 通過 | 使用 `{{ var }}` 而非 `{% autoescape off %}`，預設轉義 HTML |
+| Django 模板自動轉義 | ✅ 通過 | 使用 `{{ var }}` 而非 `{% raw %}{% autoescape off %}{% endraw %}`，預設轉義 HTML |
 | 用戶輸入顯示 | ✅ 通過 | `{{ initial_query }}` 在 input value 中，Django 會轉義 |
 | result 模板 | ⚠️ 審查中 | `{{ result.raw_taft }}` / `{{ result.raw_fda }}` — Depends on Gemini output |
 | Gemini API 輸出 | ⚠️ 注意 | Agent answer 可能包含未轉義內容，Django 模板會自動轉義 |
